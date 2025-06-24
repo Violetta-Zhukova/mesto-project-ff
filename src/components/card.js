@@ -6,11 +6,11 @@ export const likeCard = function (element) {
   element.classList.toggle("card__like-button_is-active");
 };
 
-export const addCard = function (
+export const createCard = function (
   imgValue,
   titleValue,
   deleteCardCallback,
-  openModalCallback,
+  handleImgPopupCallback,
   likeCardCallback
 ) {
   const cardTemplate = document.querySelector("#card-template").content;
@@ -18,9 +18,6 @@ export const addCard = function (
   const deleteButton = cardElement.querySelector(".card__delete-button");
   const likeButton = cardElement.querySelector(".card__like-button");
   const cardImage = cardElement.querySelector(".card__image");
-  const typeImgPopup = document.querySelector(".popup_type_image");
-  const imgPopup = typeImgPopup.querySelector(".popup__image");
-  const captionPopup = typeImgPopup.querySelector(".popup__caption");
 
   cardImage.src = imgValue;
   cardImage.alt = titleValue;
@@ -35,10 +32,7 @@ export const addCard = function (
   });
 
   cardImage.addEventListener("click", function () {
-    imgPopup.src = imgValue;
-    imgPopup.alt = titleValue;
-    captionPopup.textContent = titleValue;
-    openModalCallback(typeImgPopup);
+    handleImgPopupCallback(imgValue, titleValue);
   });
 
   return cardElement;
