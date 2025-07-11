@@ -163,18 +163,14 @@ const handleLikeCard = function (cardDataId, likeElement, likeNumber) {
 };
 
 const updateAvatar = function (userData) {
-  profileImage.style.backgroundImage = userData.avatar;
+  profileImage.style.backgroundImage = `url('${userData.avatar}')`;
 };
 
 const handleAvatarSubmit = function (evt) {
   evt.preventDefault();
   renderLoading(true, evt.submitter);
 
-  const newAvatar = {
-    avatar: avatarUrlInput.value,
-  };
-
-  editAvatar(newAvatar.avatar)
+  editAvatar(avatarUrlInput.value)
     .then((userData) => {
       updateAvatar(userData);
       formElementNewAvatar.reset();
