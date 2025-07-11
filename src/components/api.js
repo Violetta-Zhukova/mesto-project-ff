@@ -52,12 +52,7 @@ export const deleteCard = function (cardId) {
   return fetch(`${config.baseUrl}/cards/${cardId}`, {
     method: "DELETE",
     headers: config.headers,
-  })
-    .then(checkResponse)
-    .then(() => {
-      console.log(`Карточка с ID ${cardId} успешно удалена`);
-      return cardId;
-    });
+  }).then(checkResponse);
 };
 
 export const toggleLikeCard = function (cardId, isLiked) {

@@ -1,5 +1,4 @@
 import "../pages/index.css";
-// import { initialCards } from "./cards.js";
 import { createCard } from "./card.js";
 import { openModal, closeModal, handleCloseModal } from "./modal.js";
 import { enableValidation, clearValidation } from "./validation.js";
@@ -23,6 +22,7 @@ const typeImgPopup = document.querySelector(".popup_type_image");
 const imgPopup = typeImgPopup.querySelector(".popup__image");
 const captionPopup = typeImgPopup.querySelector(".popup__caption");
 const deletePopup = document.querySelector(".popup_type_delete");
+const formElementDeleteCard = deletePopup.querySelector(".popup__form");
 const avatarPopup = document.querySelector(".popup_type_new-avatar");
 
 const formElementEditProfile = editPopup.querySelector(".popup__form");
@@ -47,6 +47,17 @@ const avatarUrlInput = formElementNewAvatar.querySelector(
   ".popup__input_type_avatar-url"
 );
 
+let currentCardElement;
+let currentCardId;
+
+const popupArr = [
+  editPopup,
+  newCardPopup,
+  typeImgPopup,
+  deletePopup,
+  avatarPopup,
+];
+
 const config = {
   formSelector: ".popup__form",
   inputSelector: ".popup__input",
@@ -56,19 +67,129 @@ const config = {
   errorClass: "popup__error_visible",
 };
 
-const ImgPopup = function (cardData) {
+const handleOpenImgPopup = function (cardData) {
   imgPopup.src = cardData.link;
   imgPopup.alt = cardData.name;
   captionPopup.textContent = cardData.name;
   openModal(typeImgPopup);
 };
 
+const renderLoading = function (isLoading, buttonElement) {
+  if (isLoading) {
+    buttonElement.textContent = "Сохранение...";
+  } else {
+    buttonElement.textContent = "Сохранить";
+  }
+};
+
+const updateProfile = function (userData) {
+  profileTitle.textContent = userData.name;
+  profileDescription.textContent = userData.about;
+};
+
+const handleProfileSubmit = function (evt) {
+  evt.preventDefault();
+  renderLoading(true, evt.submitter);
+
+  const newUserData = {
+    name: nameInput.value,
+    about: jobInput.value,
+  };
+
+  editProfile(newUserData)
+    .then((userData) => {
+      updateProfile(userData);
+      closeModal(editPopup);
+    })
+    .catch((err) => {
+      console.log("Ошибка. Запрос не выполнен:", err);
+    })
+    .finally(() => renderLoading(false, evt.submitter));
+};
+
+const handleCardSubmit = function (evt) {
+  evt.preventDefault();
+  renderLoading(true, evt.submitter);
+
+  const newCardData = {
+    name: cardNameInput.value,
+    link: cardUrlInput.value,
+  };
+
+  addNewCard(newCardData)
+    .then((cardData) => {
+      cardList.prepend(createCard(cardData.owner, cardData, callbacks));
+      formElementNewCard.reset();
+      closeModal(newCardPopup);
+    })
+    .catch((err) => {
+      console.log("Ошибка. Запрос не выполнен:", err);
+    })
+    .finally(() => renderLoading(false, evt.submitter));
+};
+
+const handleDeleteButton = function (cardElement, cardDataId) {
+  currentCardElement = cardElement;
+  currentCardId = cardDataId;
+  openModal(deletePopup);
+};
+
+const handleDeleteCard = function (evt, cardElement, cardDataId) {
+  evt.preventDefault();
+
+  deleteCard(cardDataId)
+    .then(() => {
+      cardElement.remove();
+      closeModal(deletePopup);
+      currentCardElement = null;
+      currentCardId = null;
+    })
+    .catch((error) => {
+      console.log("Не удалось удалить карточку", error);
+    });
+};
+
+const handleLikeCard = function (cardDataId, likeElement, likeNumber) {
+  const isLiked = likeElement.classList.contains("card__like-button_is-active");
+
+  toggleLikeCard(cardDataId, isLiked)
+    .then((newCardData) => {
+      likeNumber.textContent = newCardData.likes.length;
+      likeElement.classList.toggle("card__like-button_is-active", !isLiked);
+    })
+    .catch((error) => {
+      console.log("Не удалось поставить лайк", error);
+    });
+};
+
+const updateAvatar = function (userData) {
+  profileImage.style.backgroundImage = userData.avatar;
+};
+
+const handleAvatarSubmit = function (evt) {
+  evt.preventDefault();
+  renderLoading(true, evt.submitter);
+
+  const newAvatar = {
+    avatar: avatarUrlInput.value,
+  };
+
+  editAvatar(newAvatar.avatar)
+    .then((userData) => {
+      updateAvatar(userData);
+      formElementNewAvatar.reset();
+      closeModal(avatarPopup);
+    })
+    .catch((err) => {
+      console.log("Ошибка. Запрос не выполнен:", err);
+    })
+    .finally(() => renderLoading(false, evt.submitter));
+};
+
 const callbacks = {
-  openModalCallback: openModal,
-  closeModalCallback: closeModal,
-  ImgPopupCallback: ImgPopup,
-  toggleLikeCardCallback: toggleLikeCard,
-  deleteCardCallback: deleteCard,
+  handleDeleteButtonCallback: handleDeleteButton,
+  handleLikeCardCallback: handleLikeCard,
+  handleOpenImgPopupCallback: handleOpenImgPopup,
 };
 
 const renderResult = function (userData, cardsData) {
@@ -80,6 +201,7 @@ const renderResult = function (userData, cardsData) {
     const card = createCard(userData, cardData, callbacks);
     cardList.append(card);
   });
+  console.log(cardsData);
 };
 
 Promise.all([getUserInfo(), getInitialCards()])
@@ -109,108 +231,19 @@ profileImage.addEventListener("click", function () {
   clearValidation(formElementNewAvatar, config);
 });
 
-const popupArr = [
-  editPopup,
-  newCardPopup,
-  typeImgPopup,
-  deletePopup,
-  avatarPopup,
-];
 popupArr.forEach((el) => {
   handleCloseModal(el);
 });
-
-const renderLoading = function (isLoading) {
-  const submitButton = document.querySelector(config.submitButtonSelector);
-  if (isLoading) {
-    submitButton.textContent = "Сохранение...";
-  } else {
-    submitButton.textContent = "Сохранить";
-  }
-};
-
-const updateProfile = function (userData) {
-  profileTitle.textContent = userData.name;
-  profileDescription.textContent = userData.about;
-};
-
-const handleProfileSubmit = function (evt) {
-  evt.preventDefault();
-  renderLoading(true);
-
-  const newUserData = {
-    name: nameInput.value,
-    about: jobInput.value,
-  };
-
-  editProfile(newUserData)
-    .then((userData) => {
-      updateProfile(userData);
-    })
-    .catch((err) => {
-      console.log("Ошибка. Запрос не выполнен:", err);
-    })
-    .finally(() => renderLoading(false));
-
-  closeModal(editPopup);
-};
-
-formElementEditProfile.addEventListener("submit", handleProfileSubmit);
-
-const handleCardSubmit = function (evt) {
-  evt.preventDefault();
-  renderLoading(true);
-
-  const newCardData = {
-    name: cardNameInput.value,
-    link: cardUrlInput.value,
-  };
-
-  const newCard = addNewCard(newCardData)
-    .then((cardData) => {
-      createCard(cardData.owner, cardData, callbacks);
-    })
-    .catch((err) => {
-      console.log("Ошибка. Запрос не выполнен:", err);
-    })
-    .finally(() => renderLoading(false));
-
-  cardList.prepend(newCard);
-  formElementNewCard.reset();
-  closeModal(newCardPopup);
-};
-
-formElementNewCard.addEventListener("submit", handleCardSubmit);
-
-const updateAvatar = function (userData) {
-  profileImage.style.backgroundImage = userData.avatar;
-};
-
-const handleAvatarSubmit = function (evt) {
-  evt.preventDefault();
-  renderLoading(true);
-
-  const newAvatar = {
-    avatar: avatarUrlInput.value,
-  };
-
-  editAvatar(newAvatar.avatar)
-    .then((userData) => {
-      updateAvatar(userData);
-    })
-    .catch((err) => {
-      console.log("Ошибка. Запрос не выполнен:", err);
-    })
-    .finally(() => renderLoading(false));
-
-  formElementNewAvatar.reset();
-  closeModal(avatarPopup);
-};
-
-formElementNewAvatar.addEventListener("submit", handleAvatarSubmit);
 
 enableValidation(config);
 
 Array.from(document.querySelectorAll(".popup")).forEach((el) => {
   el.classList.add("popup_is-animated");
 });
+
+formElementEditProfile.addEventListener("submit", handleProfileSubmit);
+formElementNewCard.addEventListener("submit", handleCardSubmit);
+formElementDeleteCard.addEventListener("submit", function (evt) {
+  handleDeleteCard(evt, currentCardElement, currentCardId);
+});
+formElementNewAvatar.addEventListener("submit", handleAvatarSubmit);
