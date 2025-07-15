@@ -74,9 +74,6 @@ export const enableValidation = function (config) {
   const formList = Array.from(document.querySelectorAll(config.formSelector));
 
   formList.forEach((formElement) => {
-    // formElement.addEventListener("submit", (event) => {
-    //   event.preventDefault();
-    // });
     setEventListeners(formElement, config);
   });
 };
@@ -91,5 +88,6 @@ export const clearValidation = function (formElement, config) {
 
   inputList.forEach((inputElement) => {
     hideInputError(formElement, inputElement, config);
+    inputElement.setCustomValidity("");
   });
 };

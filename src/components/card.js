@@ -3,7 +3,7 @@ export const createCard = function (
   cardData,
   {
     handleDeleteButtonCallback,
-    handleLikeCardCallback,
+    toggleLikeCardCallback,
     handleOpenImgPopupCallback,
   }
 ) {
@@ -36,7 +36,18 @@ export const createCard = function (
   }
 
   likeButton.addEventListener("click", function () {
-    handleLikeCardCallback(cardData._id, likeButton, likeNumber);
+    const isLiked = likeButton.classList.contains(
+      "card__like-button_is-active"
+    );
+
+    toggleLikeCardCallback(cardData._id, isLiked)
+      .then((newCardData) => {
+        likeNumber.textContent = newCardData.likes.length;
+        likeButton.classList.toggle("card__like-button_is-active", !isLiked);
+      })
+      .catch((error) => {
+        console.log("Не удалось поставить лайк", error);
+      });
   });
 
   cardImage.addEventListener("click", function () {
