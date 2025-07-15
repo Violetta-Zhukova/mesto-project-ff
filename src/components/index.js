@@ -149,19 +149,6 @@ const handleDeleteCard = function (evt, cardElement, cardDataId) {
     });
 };
 
-// const handleLikeCard = function (cardDataId, likeElement, likeNumber) {
-//   const isLiked = likeElement.classList.contains("card__like-button_is-active");
-
-//   toggleLikeCard(cardDataId, isLiked)
-//     .then((newCardData) => {
-//       likeNumber.textContent = newCardData.likes.length;
-//       likeElement.classList.toggle("card__like-button_is-active", !isLiked);
-//     })
-//     .catch((error) => {
-//       console.log("Не удалось поставить лайк", error);
-//     });
-// };
-
 const updateAvatar = function (userData) {
   profileImage.style.backgroundImage = `url('${userData.avatar}')`;
 };
@@ -197,7 +184,6 @@ const renderResult = function (userData, cardsData) {
     const card = createCard(userData, cardData, callbacks);
     cardList.append(card);
   });
-  console.log(cardsData);
 };
 
 Promise.all([getUserInfo(), getInitialCards()])
